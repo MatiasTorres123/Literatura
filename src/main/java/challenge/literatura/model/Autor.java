@@ -13,6 +13,7 @@ public class Autor {
     private Integer anioNacimiento;
     private Integer anioFallecimiento;
 
+    public Autor(){}
     public Autor(String nombre, Integer anio1, Integer anio2) {
         this.nombre=nombre;
         this.anioNacimiento=anio1;
@@ -49,5 +50,12 @@ public class Autor {
 
     public void setAnioFallecimiento(Integer anioFallecimiento) {
         this.anioFallecimiento = anioFallecimiento;
+    }
+
+    @Override
+    public String toString() {
+        return "Autor{" +
+                "nombre='" + nombre + '\'' +
+                '}';
     }
 }

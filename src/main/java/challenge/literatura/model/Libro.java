@@ -16,14 +16,16 @@ public class Libro {
     private String idioma;
     private Integer NumDescargas;
 
-    public Libro(){}
-
-    public Libro(DatosLibro dato,Autor autor){
-        this.titulo=dato.titulo();
-        this.autor=autor;
-        this.idioma=dato.idioma().get(0);
-        this.NumDescargas=dato.cantidadDescargas();
+    public Libro() {
     }
+
+    public Libro(DatosLibro dato, Autor autor) {
+        this.titulo = dato.titulo();
+        this.autor = autor;
+        this.idioma = dato.idioma().get(0);
+        this.NumDescargas = dato.cantidadDescargas();
+    }
+
     public Long getId() {
         return id;
     }
@@ -66,11 +68,9 @@ public class Libro {
 
     @Override
     public String toString() {
-        return "Libro{" +
-                "titulo='" + titulo + '\'' +
-                ", autor=" + autor +
-                ", idioma='" + idioma + '\'' +
-                ", NumDescargas=" + NumDescargas +
-                '}';
+        return "Libro: " + titulo + "\n" +
+                "Autor: " + (autor != null ? autor.getNombre() : "Desconocido") + "\n" +
+                "Idioma: " + idioma + "\n" +
+                "Descargas: " + NumDescargas +"\n";
     }
 }

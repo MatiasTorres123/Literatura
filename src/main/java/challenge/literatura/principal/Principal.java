@@ -27,7 +27,10 @@ public class Principal {
         while (opcion != 0) {
             var menu = """
                     1 - Buscar libro por titulo 
-                    
+                    2 - Listar todos los libros
+                    3 - Listar libros por idioma
+                    4 - Listar autores de libros buscados
+                    5 - Listar autores vivos en un determinado año
                     0 - Salir
                     """;
             System.out.println(menu);
@@ -37,39 +40,116 @@ public class Principal {
                 case 1:
                     buscarLibroPorTitulo();
                     break;
+                case 2:
+                    listarTodosLosLibros();
+                    break;
+                case 3:
+                    listarLibrosPorIdioma();
+                    break;
+                case 4:
+                    listarAutoresDeLibrosBuscados();
+                    break;
+                case 5:
+                    listarAutoresVivosAnio();
+                    break;
+                case 0:
+                    System.out.println("Saliendo!");
+                    break;
                 default:
                     System.out.println("Opcion invalida");
             }
         }
     }
 
+
+
+    private void listarTodosLosLibros() {
+        libroRepository.findAll().forEach(System.out::println);
+    }
+
     private DatosLibro buscarLibroPorTitulo() {
         System.out.println("Escribe el titulo del libro que deseas buscar");
         var tituloLibro = teclado.nextLine();
-        var json = consumoAPI.obtenerDatos(link + "?search="+tituloLibro.replace(" ","%"));
-        System.out.println(json);
+        var json = consumoAPI.obtenerDatos(link + "?search="+tituloLibro.replace(" ","+"));
         var datos = conversor.obtenerDatos(json, Respuesta.class);
         List<DatosLibro> libros = datos.data();
 
-        DatosLibro libro = libros.stream()
-                        .findFirst()
-                        .orElseThrow(()-> new RuntimeException("No se encontro ningun libro"));
-
-        DatosAutor datosAutor = libro.autores().stream()
-                .findFirst()
-                .orElseThrow();
+        DatosLibro libro = null;
+        if(libros.isEmpty()){
+            System.out.println("No se encontro ningun libro con ese titulo");
+        }else {
+            libro = libros.get(0);
 
 
-        Autor autor = autorRepository.findByNombre(datosAutor.nombre()).orElseGet(() -> autorRepository.save( new Autor( datosAutor.nombre(), datosAutor.anioNacimiento(), datosAutor.anioFallecimiento() ) ) );
+            DatosAutor datosAutor = libro.autores().stream()
+                    .findFirst()
+                    .orElseThrow();
 
-        Libro libroNuevo = new Libro(libro,autor);
-        Optional<Libro> libroExistente = libroRepository.findByTitulo(libroNuevo.getTitulo());
 
-        if (libroExistente.isEmpty()) {
-            libroRepository.save(libroNuevo);
+            Autor autor = autorRepository.findByNombre(datosAutor.nombre()).orElseGet(() -> autorRepository.save(new Autor(datosAutor.nombre(), datosAutor.anioNacimiento(), datosAutor.anioFallecimiento())));
+
+            Libro libroNuevo = new Libro(libro, autor);
+            Optional<Libro> libroExistente = libroRepository.findByTitulo(libroNuevo.getTitulo());
+
+            if (libroExistente.isEmpty()) {
+                libroRepository.save(libroNuevo);
+            }
+
+            System.out.println(libroNuevo);
         }
-
-        System.out.println(libroNuevo);
         return libro;
     }
+
+    private void listarLibrosPorIdioma(){
+        var menu = """
+                    Ingrese el idioma para buscar los libros
+                    es - español 
+                    en - ingles
+                    fr - frances
+                    pt - portugues
+                    """;
+        System.out.println(menu);
+        var idioma = teclado.nextLine();
+        List<Libro> libros=libroRepository.findByIdioma(idioma);
+        if (!libros.isEmpty()) {
+            libros.forEach(System.out::println);
+        }else{
+            System.out.println("Actualmente no hay libros registrados en ese idioma");
+        }
+
+    }
+
+    private void listarAutoresDeLibrosBuscados() {
+        List<Autor> autores = autorRepository.findAll();
+        listar(autores);
+    }
+    private void listarAutoresVivosAnio() {
+        System.out.println("Ingrese el año:");
+        var anio = teclado.nextInt();
+        List<Autor> autores = autorRepository.buscarAutoreVivosEnUnAnio(anio);
+        listar(autores);
+    }
+
+    private void listar(List<Autor> autores){
+        for (Autor a : autores) {
+            System.out.println("Autor: " + a.getNombre());
+            System.out.println("Fecha de nacimiento: " + a.getAnioNacimiento());
+            System.out.println("Fecha de fallecimiento: " + (a.getAnioFallecimiento() != null ? a.getAnioFallecimiento() : "Sigue vivo"));
+
+            List<Libro> libros = libroRepository.findByAutor(a);
+
+            if (!libros.isEmpty()) {
+                System.out.println("Libros:");
+                libros.forEach(l-> System.out.println(l.getTitulo()));
+            } else {
+                System.out.println("Libros: Ninguno registrado");
+            }
+
+            System.out.println("\n------------------------\n");
+
+
+
+        }
+    }
+
 }
